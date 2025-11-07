@@ -36,7 +36,5 @@ public class MainMenuScene {
         exit.setOnAction(e -> System.exit(0));
 
         return scene;
-
     }
-
 }

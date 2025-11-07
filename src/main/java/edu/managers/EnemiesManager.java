@@ -5,6 +5,7 @@ import edu.game.Bullet;
 import edu.game.Enemy;
 import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class EnemiesManager implements IShootHandler {
@@ -18,6 +19,7 @@ public class EnemiesManager implements IShootHandler {
 
     public void spawnEnemies() {
         enemies.clear();
+
         int row = 4;
         int cols = 5;
         double startX = 80;
@@ -25,10 +27,8 @@ public class EnemiesManager implements IShootHandler {
         double gapX = 90;
         double gapY = 60;
 
-        for(int r = 0; r < row; r++)
-        {
-            for(int c=0; c < cols; c++)
-            {
+        for (int r = 0; r < row; r++) {
+            for (int c = 0; c < cols; c++) {
                 enemies.add(new Enemy(startX + c * gapX, startY + r * gapY, this));
             }
         }
@@ -38,7 +38,7 @@ public class EnemiesManager implements IShootHandler {
             enemy.update(dt, worldW);
         }
     }
-    public void renderEnemies (GraphicsContext g){
+    public void renderEnemies(GraphicsContext g){
         for (Enemy enemy : enemies){
             enemy.render(g);
         }
@@ -49,16 +49,15 @@ public class EnemiesManager implements IShootHandler {
     }
 
     public boolean checkBulletCollision(Bullet bullet){
-        if(!bullet.isByPlayer())
+        if (!bullet.isByPlayer())
             return false;
 
-        for (int i = enemies.size() - 1; i >= 0; i--) {
+        Iterator<Enemy> iterator = enemies.iterator();
+        while (iterator.hasNext()) {
+            Enemy enemy = iterator.next();
 
-            Enemy enemy = enemies.get(i);
-
-            if (enemy.checkBulletCollision(bullet)){
-                // можно логику взрыва прописать (смерти противника)
-                enemies.remove(i);
+            if (enemy.checkBulletCollision(bullet)) {
+                iterator.remove();
                 return true;
             }
         }

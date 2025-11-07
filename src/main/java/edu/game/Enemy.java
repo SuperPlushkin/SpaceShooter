@@ -72,13 +72,9 @@ public class Enemy {
         }
     }
     public boolean checkBulletCollision(Bullet bullet){
-
         double bx = bullet.getX(), by = bullet.getY(), bw = bullet.getW(), bh = bullet.getH();
 
-        boolean hit = bx < x + w && bx + bw > x &&
-                by < y + h && by + bh > y;
-
-        return hit;
+        return bx < x + w && bx + bw > x && by < y + h && by + bh > y;
     }
 
     private long calculateRandomDelayMs() {

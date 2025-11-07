@@ -1,5 +1,7 @@
 package edu.game;
 
+import edu.GameScene;
+import edu.IGameActionsHandler;
 import edu.IShootHandler;
 import edu.engine.Assets;
 import edu.engine.SceneController;
@@ -11,6 +13,7 @@ import javafx.scene.input.KeyCode;
 public class Player {
 
     private final IShootHandler shootHandler;
+    private final IGameActionsHandler actionsHandler;
 
     private double x;
     private double y;
@@ -21,6 +24,8 @@ public class Player {
     private int lives = 3;
     private int hp = 3;
 
+    private final int MAX_HP = 3;
+
     // стрельба
     private long lastShot = 0;
     private long fireDelay = 300_000_000L;
@@ -28,10 +33,11 @@ public class Player {
     // костюм
     private final Image sprite = Assets.getImage("kirill_ship.png");
 
-    public Player(double startX, double startY, IShootHandler shootHandler) {
+    public Player(double startX, double startY, GameScene gameScene) {
         this.x = startX;
         this.y = startY;
-        this.shootHandler = shootHandler;
+        this.shootHandler = gameScene;
+        this.actionsHandler = gameScene;
     }
 
     public void update (double dt, long now, edu.engine.Keys keys){
@@ -75,11 +81,27 @@ public class Player {
 
         if (hit){
             // пока что просто жизни отнимаю, на форме не отображаю
-            lives -= 1;
+            minusHP(1);
             return true;
         }
 
         return false;
+    }
+
+    public void minusHP(int minus_hp){
+        if (hp - minus_hp <= 0){
+            lives--;
+
+            // dead логика
+            if (lives == 0)
+            {
+                actionsHandler.endGame();
+            }
+            else actionsHandler.restartLastLevel();
+
+            hp = MAX_HP;
+        }
+        else hp -= minus_hp;
     }
 
     public int getLives(){return lives;}
