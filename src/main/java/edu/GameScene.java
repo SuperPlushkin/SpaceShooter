@@ -1,5 +1,6 @@
 package edu;
 
+import edu.engine.GameScenes;
 import edu.engine.Keys;
 import edu.engine.SceneController;
 import edu.game.Bullet;
@@ -28,8 +29,10 @@ import java.util.*;
 
 public class GameScene implements IShootHandler, IGameActionsHandler {
 
-    private static final double W = SceneController.WIDTH;
-    private static final double H = SceneController.HEIGHT;
+    private final double W;
+    private final double H;
+
+    private final SceneController sceneController;
 
     private boolean isGameOver = false;
 
@@ -37,13 +40,23 @@ public class GameScene implements IShootHandler, IGameActionsHandler {
     private AnimationTimer loop;
     private boolean paused = false;
 
-    private final Player player = new Player(W / 2.0, H - 140, this);
-    private final EnemiesManager enemiesManager = new EnemiesManager(this);
-    private final BulletsManager bulletsManager = new BulletsManager();
+    private final Player player;
+    private final EnemiesManager enemiesManager;
+    private final BulletsManager bulletsManager;
 
     private Label LifesPlayer;
     private Label hpPlayer;
     private VBox gameOver;
+
+    public GameScene(SceneController sceneController){
+        this.sceneController = sceneController;
+        this.W = sceneController.WIDTH;
+        this.H = sceneController.HEIGHT;
+
+        player = new Player(W / 2.0, H - 140, this);
+        enemiesManager = new EnemiesManager(this);
+        bulletsManager = new BulletsManager();
+    }
 
     public Scene create (){
         Canvas canvas = new Canvas(W, H);
@@ -99,8 +112,8 @@ public class GameScene implements IShootHandler, IGameActionsHandler {
             overlay.setVisible(false);
             overlay.setMouseTransparent(true);
         });
-        toMenu.setOnAction(e -> SceneController.set(new MainMenuScene().create()));
-        toMenu2.setOnAction(e -> SceneController.set(new MainMenuScene().create()));
+        toMenu.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
+        toMenu2.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
 
         // 👇 создаём врагов в начале сцены
         enemiesManager.spawnEnemies();
@@ -133,7 +146,7 @@ public class GameScene implements IShootHandler, IGameActionsHandler {
                 prev = now;
 
                 if (!paused){
-                    player.update(dt, now, keys);
+                    player.update(dt, now, keys, W, H);
                     enemiesManager.updateEnemies(dt, W);
                     bulletsManager.updateBullets(dt);
 

@@ -40,7 +40,7 @@ public class Player {
         this.actionsHandler = gameScene;
     }
 
-    public void update (double dt, long now, edu.engine.Keys keys){
+    public void update (double dt, long now, edu.engine.Keys keys, double W, double H){
         double vx = 0, vy = 0;
 
         if (keys.isDown(KeyCode.A) || keys.isDown(KeyCode.LEFT)) vx -= speed;
@@ -50,10 +50,6 @@ public class Player {
 
         x += vx * dt;
         y += vy * dt;
-
-        // границы окна
-        double W = SceneController.WIDTH;
-        double H = SceneController.HEIGHT;
 
         if (x<32) x=32;
         if (x > W -32) x = W - 32;

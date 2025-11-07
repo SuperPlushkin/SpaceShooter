@@ -1,6 +1,6 @@
 package edu.ui;
 
-import edu.GameScene;
+import edu.engine.GameScenes;
 import edu.engine.SceneController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,6 +10,13 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 public class MainMenuScene {
+
+    private final SceneController sceneController;
+
+    public MainMenuScene(SceneController sceneController){
+        this.sceneController = sceneController;
+    }
+
     public Scene create(){
         Label title = new Label("КОСМО ШУТЕР\n(Kirill Edition)"); // название в главном меню
         title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-alignment: center;");
@@ -28,11 +35,10 @@ public class MainMenuScene {
         box.setPadding(new Insets(24));
         box.setAlignment(Pos.TOP_CENTER);
 
-        Scene scene = new Scene (box, SceneController.WIDTH, SceneController.HEIGHT);
-
-        start.setOnAction(e -> SceneController.set(new GameScene().create()));
-        score.setOnAction(e -> SceneController.set(new HighScoreScene().create()));
-        author.setOnAction(e -> SceneController.set(new AuthorScene().create()));
+        Scene scene = new Scene (box, sceneController.WIDTH, sceneController.HEIGHT);
+        start.setOnAction(e -> sceneController.set(GameScenes.GameScene));
+        score.setOnAction(e -> sceneController.set(GameScenes.HighScoreScene));
+        author.setOnAction(e -> sceneController.set(GameScenes.AuthorScene));
         exit.setOnAction(e -> System.exit(0));
 
         return scene;

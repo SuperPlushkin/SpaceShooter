@@ -1,5 +1,6 @@
 package edu;
 
+import edu.engine.GameScenes;
 import edu.ui.MainMenuScene;
 import edu.engine.SceneController;
 import javafx.application.Application;
@@ -13,9 +14,9 @@ public class Main extends Application {
         stage.setTitle("Космо шутер");
         stage.setResizable(false);
 
-        SceneController.init(stage, 520, 580);     // размер игрового поля
-        Scene menu = new MainMenuScene().create();
-        SceneController.set(menu);
+        var sceneController = new SceneController();
+        sceneController.init(stage, 520, 580); // размер игрового поля
+        sceneController.set(GameScenes.MainMenuScene);
 
         stage.show();
     }
