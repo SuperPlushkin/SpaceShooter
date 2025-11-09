@@ -1,4 +1,4 @@
-package edu.engine;
+package edu.subclasses;
 
 import javafx.scene.image.Image;
 

@@ -1,10 +1,8 @@
 package edu;
 
-import edu.engine.GameScenes;
-import edu.ui.MainMenuScene;
-import edu.engine.SceneController;
+import edu.subclasses.GameScenes;
+import edu.managers.SceneController;
 import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -21,5 +19,5 @@ public class Main extends Application {
         stage.show();
     }
 
-    public static void main(String[] args) {launch(args);}
+    //public static void main(String[] args) {launch(args);}
 }

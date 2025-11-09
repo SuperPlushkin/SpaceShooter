@@ -10,8 +10,6 @@ public class BulletsManager {
 
     private final List<Bullet> bullets = new ArrayList<>();
 
-    public BulletsManager(){}
-
     public void updateBullets (double dt){
         Iterator<Bullet> it = bullets.iterator();
         while(it.hasNext()){
@@ -29,8 +27,11 @@ public class BulletsManager {
         }
     }
 
-    public void makeBullet (double x, double y, double vy, boolean byPlayer){
-        bullets.add(new Bullet(x, y, vy, byPlayer));
+    public void makeBullet (double x, double y, double vx, double vy, boolean byPlayer){
+        bullets.add(new Bullet(x, y, vx, vy, byPlayer));
+    }
+    public void clearBullets(){
+        bullets.clear();
     }
     public List<Bullet> getBullets(){
         return bullets;

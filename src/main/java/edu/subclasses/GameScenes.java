@@ -1,4 +1,4 @@
-package edu.engine;
+package edu.subclasses;
 
 public enum GameScenes {
     AuthorScene,

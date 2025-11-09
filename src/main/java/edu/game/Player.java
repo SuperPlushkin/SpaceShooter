@@ -1,87 +1,155 @@
 package edu.game;
 
-import edu.GameScene;
-import edu.IGameActionsHandler;
-import edu.IShootHandler;
-import edu.engine.Assets;
-import edu.engine.SceneController;
+import edu.subclasses.IGameActionsHandler;
+import edu.subclasses.IShootHandler;
+import edu.subclasses.Assets;
+import edu.managers.LevelsManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 
 public class Player {
 
     private final IShootHandler shootHandler;
     private final IGameActionsHandler actionsHandler;
 
+    private final double START_X;
+    private final double START_Y;
+
     private double x;
     private double y;
-    private double w = 56;
-    private double h = 48;
-
-    private double speed = 400; // пикс/сек
-    private int lives = 3;
-    private int hp = 3;
+    private final double w = 50;
+    private final double h = 42;
 
     private final int MAX_HP = 3;
+    private final int MAX_LIVES = 3;
+    private int hp;
+    private int lives;
 
-    // стрельба
+    final int MAX_CONSECUTIVE_SHOTS = 3; // серия выстрелов максимальная
+    final long fireDelay = 200_000_000L;
+    final long COOLDOWN_DURATION = 1_000_000_000L;
     private long lastShot = 0;
-    private long fireDelay = 300_000_000L;
+    private int consecutiveShots = 0; // Счетчик выстрелов в текущей серии
+    private long cooldownEndTime = 0; // Наносекунда окончания кулдауна
 
-    // костюм
     private final Image sprite = Assets.getImage("kirill_ship.png");
 
-    public Player(double startX, double startY, GameScene gameScene) {
+    public Player(double startX, double startY, LevelsManager levelsManager) {
         this.x = startX;
         this.y = startY;
-        this.shootHandler = gameScene;
-        this.actionsHandler = gameScene;
+        this.START_X = startX;
+        this.START_Y = startY;
+        this.hp = MAX_HP;
+        this.lives = MAX_LIVES;
+        this.shootHandler = levelsManager;
+        this.actionsHandler = levelsManager;
     }
 
-    public void update (double dt, long now, edu.engine.Keys keys, double W, double H){
-        double vx = 0, vy = 0;
+    public void reset() {
+        this.lives = MAX_LIVES;
+        onLevelReset();
+    }
+    public void onLevelReset() {
+        this.x = START_X;
+        this.y = START_Y;
+        this.hp = MAX_HP;
+        this.lastShot = 0;
+        this.consecutiveShots = 0;
+        this.cooldownEndTime = 0;
+    }
+    public void update (double dt, long now, edu.subclasses.Keys keys, double W, double H){
 
-        if (keys.isDown(KeyCode.A) || keys.isDown(KeyCode.LEFT)) vx -= speed;
-        if (keys.isDown(KeyCode.D) || keys.isDown(KeyCode.RIGHT)) vx += speed;
-        if (keys.isDown(KeyCode.W) || keys.isDown(KeyCode.UP)) vy -= speed;
-        if (keys.isDown(KeyCode.S) || keys.isDown(KeyCode.DOWN)) vy += speed;
+        double vx = 0, vy = 0;
+        double speed = 400; // пикс/сек
+
+        if (keys.isDown(KeyCode.A) || keys.isDown(KeyCode.LEFT))
+            vx -= speed;
+        if (keys.isDown(KeyCode.D) || keys.isDown(KeyCode.RIGHT))
+            vx += speed;
+        if (keys.isDown(KeyCode.W) || keys.isDown(KeyCode.UP))
+            vy -= speed;
+        if (keys.isDown(KeyCode.S) || keys.isDown(KeyCode.DOWN))
+            vy += speed;
 
         x += vx * dt;
         y += vy * dt;
 
-        if (x<32) x=32;
-        if (x > W -32) x = W - 32;
-        if (y < 80) y = 80;
-        if (y < H - 80) y = H - 80;
+        double MAX_X = 32;
+        double MAX_Y = 30;
 
-        // стрельба
-        if(keys.isDown(KeyCode.SPACE) && now - lastShot > fireDelay){
-            shootHandler.makeShoot(x, y - 36, -300, true);
+        if (x < MAX_X)
+            x = MAX_X;
+        if (x > W - MAX_X)
+            x = W - MAX_X;
+        if (y < MAX_Y)
+            y = MAX_Y;
+        if (y > H - MAX_Y)
+            y = H - MAX_Y;
+
+        // логика стрельбы
+        boolean canShoot = keys.isDown(KeyCode.SPACE) && now - lastShot > fireDelay;
+
+        if(canShoot){
+            shootHandler.makeShoot(x, y - 36, 0, -300, true);
             lastShot = now;
         }
+
+        // логика стрельбы очередями (потом как-нибудь)
+//        if (canShoot && now >= cooldownEndTime) {
+//
+//            shootHandler.makeShoot(x, y - 36, 0, -300, true);
+//            lastShot = now;
+//            consecutiveShots++;
+//
+//            if (consecutiveShots >= MAX_CONSECUTIVE_SHOTS) {
+//                cooldownEndTime = now + COOLDOWN_DURATION;
+//                consecutiveShots = 0;
+//            }
+//        }
     }
     public void render (GraphicsContext g){
         g.drawImage(sprite, x - w / 2, y - h / 2, w, h);
+
+        // отрисовка кулдауна у оружия
+        if (System.nanoTime() < cooldownEndTime) {
+            g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+            g.setFill(Color.RED);
+            g.setTextAlign(TextAlignment.CENTER);
+
+            double textY = y + h / 2 + 15;
+            g.fillText("RELOADING...", x, textY);
+        }
+
+        // отрисовка имени
+        g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+        g.setFill(Color.DARKRED);
+        g.setTextAlign(TextAlignment.CENTER);
+
+        double textY = y - h / 2 - 5;
+        g.fillText("Кирилл Вейдер", x, textY);
     }
 
     public boolean checkBulletCollision(Bullet bullet){
         if (bullet.isByPlayer())
             return false;
 
-        double bx = bullet.getX(), by = bullet.getY(), bw = bullet.getW(), bh = bullet.getH();
+        double b_halfW = bullet.getW() / 2.0;
+        double b_halfH = bullet.getH() / 2.0;
+        double b_x = bullet.getX();
+        double b_y = bullet.getY();
 
-        boolean hit = bx < x + w && bx + bw > x &&
-                      by < y + h && by + bh > y;
+        double p_halfW = this.w / 2.0;
+        double p_halfH = this.h / 2.0;
 
-        if (hit){
-            // пока что просто жизни отнимаю, на форме не отображаю
-            minusHP(1);
-            return true;
-        }
+        boolean overlapX = (b_x + b_halfW >= this.x - p_halfW) && (b_x - b_halfW <= this.x + p_halfW);
+        boolean overlapY = (b_y + b_halfH >= this.y - p_halfH) && (b_y- b_halfH <= this.y + p_halfH);
 
-        return false;
+        return overlapX && overlapY;
     }
 
     public void minusHP(int minus_hp){
@@ -91,9 +159,9 @@ public class Player {
             // dead логика
             if (lives == 0)
             {
-                actionsHandler.endGame();
+                actionsHandler.endGame(false);
             }
-            else actionsHandler.restartLastLevel();
+            else actionsHandler.restartActiveLevel();
 
             hp = MAX_HP;
         }
