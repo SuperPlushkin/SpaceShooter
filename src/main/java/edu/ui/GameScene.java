@@ -3,7 +3,7 @@ package edu.ui;
 import edu.subclasses.IScene;
 import edu.subclasses.GameScenes;
 import edu.subclasses.Keys;
-import edu.managers.SceneController;
+import edu.managers.ScenesManager;
 import edu.managers.LevelsManager;
 import edu.subclasses.StylesHelper;
 
@@ -26,7 +26,7 @@ public class GameScene implements IScene {
     private final double W;
     private final double H;
 
-    private final SceneController sceneController;
+    private final ScenesManager scenesManager;
     private final Scene MyScene;
     private GraphicsContext g;
 
@@ -50,10 +50,10 @@ public class GameScene implements IScene {
     private Label loseStatsLabel;
     private Label winStatsLabel;
 
-    public GameScene(SceneController sceneController) {
-        this.sceneController = sceneController;
-        this.W = sceneController.WIDTH;
-        this.H = sceneController.HEIGHT;
+    public GameScene(ScenesManager scenesManager) {
+        this.scenesManager = scenesManager;
+        this.W = scenesManager.WIDTH;
+        this.H = scenesManager.HEIGHT;
 
         MyScene = createScene();
         // ВАЖНО: точка 'g' инициализируется внутри createScene(), поэтому LevelsManager должен быть создан после него.
@@ -172,7 +172,7 @@ public class GameScene implements IScene {
         setMenuVisibility(gameOverMenu, false);
 
         restartBtn.setOnAction(e -> startGame());
-        toMenuBtn.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
+        toMenuBtn.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
 
         return gameOverMenu;
     }
@@ -193,7 +193,7 @@ public class GameScene implements IScene {
 
         setMenuVisibility(menu, false);
 
-        toMenuBtn.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
+        toMenuBtn.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
 
         return menu;
     }
@@ -217,7 +217,7 @@ public class GameScene implements IScene {
 
         resumeBtn.setOnAction(e -> levelsManager.togglePause());
         restartBtn.setOnAction(e -> startGame());
-        toMenuBtn.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
+        toMenuBtn.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
 
         return pauseMenu;
     }

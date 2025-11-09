@@ -8,7 +8,7 @@ import edu.ui.HighScoreScene;
 import edu.ui.MainMenuScene;
 import javafx.stage.Stage;
 
-public class SceneController {
+public class ScenesManager {
 
     public Stage primary;
     public int WIDTH;

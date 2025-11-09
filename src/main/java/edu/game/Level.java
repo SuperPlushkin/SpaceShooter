@@ -7,7 +7,6 @@ import edu.managers.EnemiesManager;
 import edu.managers.LevelsManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +15,10 @@ public class Level implements IShootHandler, ILevelActionsHandler {
     private final LevelsManager levelsManager;
     private final EnemiesManager enemiesManager;
     private final BulletsManager bulletsManager;
-    private final int levelId;
 
-    public Level (LevelsManager levelsManager, int levelId) {
+    public Level (LevelsManager levelsManager, int enemySeed) {
         this.levelsManager = levelsManager;
-        this.levelId = levelId;
-        enemiesManager = new EnemiesManager(this, this, levelId);
+        enemiesManager = new EnemiesManager(this, this, enemySeed);
         bulletsManager = new BulletsManager();
     }
 

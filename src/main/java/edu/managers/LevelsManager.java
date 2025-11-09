@@ -17,7 +17,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private final double W;
     private final double H;
 
-    private GameScene gameScene;
+    private final GameScene gameScene;
 
     private final Player player;
     private final List<Level> levels = new ArrayList<>();

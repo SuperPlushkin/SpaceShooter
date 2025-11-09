@@ -132,6 +132,20 @@ public class Player {
 
         double textY = y - h / 2 - 5;
         g.fillText("Кирилл Вейдер", x, textY);
+
+        // отрисовка хп противника
+        g.save();
+        double hpBarWidth = w * 0.8; // Ширина полоски здоровья (80% ширины корабля)
+        double hpBarHeight = 3;     // Высота полоски здоровья
+        double hpBarX = x - hpBarWidth / 2; // Центрируем полоску
+        double hpBarY = y + h / 2 + 5;      // Чуть ниже спрайта
+
+        g.setFill(Color.BLACK);
+        g.fillRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
+        g.setFill(Color.RED);
+        double currentHpWidth = hpBarWidth * ((double)hp / MAX_HP);
+        g.fillRect(hpBarX, hpBarY, currentHpWidth, hpBarHeight);
+        g.restore();
     }
 
     public boolean checkBulletCollision(Bullet bullet){

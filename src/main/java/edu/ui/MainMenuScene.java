@@ -2,7 +2,7 @@ package edu.ui;
 
 import edu.subclasses.IScene;
 import edu.subclasses.GameScenes;
-import edu.managers.SceneController;
+import edu.managers.ScenesManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -13,10 +13,10 @@ import javafx.scene.layout.VBox;
 public class MainMenuScene implements IScene {
 
     private final Scene MyScene;
-    private final SceneController sceneController;
+    private final ScenesManager scenesManager;
 
-    public MainMenuScene(SceneController sceneController){
-        this.sceneController = sceneController;
+    public MainMenuScene(ScenesManager scenesManager){
+        this.scenesManager = scenesManager;
         MyScene = create();
     }
 
@@ -38,10 +38,10 @@ public class MainMenuScene implements IScene {
         box.setPadding(new Insets(24));
         box.setAlignment(Pos.TOP_CENTER);
 
-        Scene scene = new Scene(box, sceneController.WIDTH, sceneController.HEIGHT);
-        start.setOnAction(e -> sceneController.set(GameScenes.GameScene));
-        score.setOnAction(e -> sceneController.set(GameScenes.HighScoreScene));
-        author.setOnAction(e -> sceneController.set(GameScenes.AuthorScene));
+        Scene scene = new Scene(box, scenesManager.WIDTH, scenesManager.HEIGHT);
+        start.setOnAction(e -> scenesManager.set(GameScenes.GameScene));
+        score.setOnAction(e -> scenesManager.set(GameScenes.HighScoreScene));
+        author.setOnAction(e -> scenesManager.set(GameScenes.AuthorScene));
         exit.setOnAction(e -> System.exit(0));
 
         return scene;

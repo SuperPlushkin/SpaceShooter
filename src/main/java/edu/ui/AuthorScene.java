@@ -2,7 +2,7 @@ package edu.ui;
 
 import edu.subclasses.IScene;
 import edu.subclasses.GameScenes;
-import edu.managers.SceneController;
+import edu.managers.ScenesManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,11 +12,11 @@ import javafx.scene.layout.VBox;
 
 public class AuthorScene implements IScene {
 
-    private final SceneController sceneController;
+    private final ScenesManager scenesManager;
     private final Scene MyScene;
 
-    public AuthorScene(SceneController sceneController){
-        this.sceneController = sceneController;
+    public AuthorScene(ScenesManager scenesManager){
+        this.scenesManager = scenesManager;
         MyScene = createScene();
     }
 
@@ -29,8 +29,8 @@ public class AuthorScene implements IScene {
         root.setPadding(new Insets(24));
         root.setAlignment(Pos.TOP_CENTER);
 
-        Scene scene = new Scene(root, sceneController.WIDTH, sceneController.HEIGHT);
-        back.setOnAction(e -> sceneController.set(GameScenes.MainMenuScene));
+        Scene scene = new Scene(root, scenesManager.WIDTH, scenesManager.HEIGHT);
+        back.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
         return scene;
     }
     public Scene getScene(){
