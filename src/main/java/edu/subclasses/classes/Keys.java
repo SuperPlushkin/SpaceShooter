@@ -1,4 +1,4 @@
-package edu.subclasses;
+package edu.subclasses.classes;
 
 import javafx.scene.input.KeyCode;
 import java.util.HashSet;

@@ -2,8 +2,8 @@ package edu.managers;
 
 import edu.game.FatEnemy;
 import edu.game.NormalEnemy;
-import edu.subclasses.ILevelActionsHandler;
-import edu.subclasses.IShootHandler;
+import edu.subclasses.interfaces.ILevelActionsHandler;
+import edu.subclasses.interfaces.IShootHandler;
 import edu.game.Bullet;
 import edu.game.Enemy;
 import javafx.scene.canvas.GraphicsContext;
@@ -31,12 +31,14 @@ public class EnemiesManager implements IShootHandler {
             spawnEnemiesVersion1();
         else if (levelId == 2)
             spawnEnemiesVersion2();
+        else if (levelId == 3)
+            spawnEnemiesVersion3();
     }
     public void spawnEnemiesVersion1() {
         int row = 4;
         int cols = 5;
         double startX = 80;
-        double startY = 60;
+        double startY = 75;
         double gapX = 70;
         double gapY = 60;
 
@@ -47,21 +49,65 @@ public class EnemiesManager implements IShootHandler {
         }
     }
     public void spawnEnemiesVersion2() {
-        int cols = 3;
-        double startX = 150;
-        double startY = 60;
-        double gapX = 100;
+        double worldW = 600;
+        double centerX = worldW / 2.0;
+        double lineY1 = 75;
+        double lineY2 = 135;
+        double bossY = 200;
 
-        for (int c = 0; c < cols; c++) {
-            enemies.add(new FatEnemy(startX + c * gapX, startY, this));
-            enemies.add(new FatEnemy(startX + c * gapX, startY + 80, this));
+        // 1. Первая линия NormalEnemy (Щит)
+        int normalCols = 6;
+        double normalStartX = 40;
+        double normalGapX = 90;
+
+        for (int c = 0; c < normalCols; c++) {
+            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, lineY1, this));
+            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, lineY2, this));
         }
+
+        // 2. Вторая линия BossEnemy (Эскорт)
+        enemies.add(new FatEnemy(centerX - 120, bossY, this));
+        enemies.add(new FatEnemy(centerX + 120, bossY, this));
+    }
+    public void spawnEnemiesVersion3() {
+        double worldW = 600;
+        double centerX = worldW / 2.0;
+
+        // 1. Две линии BossEnemy в центре (тяжелое ядро)
+        double bossY1 = 90;
+        double bossY2 = 170;
+        double bossGapX = 150;
+
+        // Линия BossEnemy 1
+        enemies.add(new FatEnemy(centerX - bossGapX, bossY1, this));
+        enemies.add(new FatEnemy(centerX, bossY1, this));
+        enemies.add(new FatEnemy(centerX + bossGapX, bossY1, this));
+
+        // Линия BossEnemy 2
+        enemies.add(new FatEnemy(centerX - bossGapX, bossY2, this));
+        enemies.add(new FatEnemy(centerX, bossY2, this));
+        enemies.add(new FatEnemy(centerX + bossGapX, bossY2, this));
+
+        // 2. Фланговая защита из NormalEnemy (быстрый маневр)
+        double flankY = 240;
+        double flankX = 50;
+        double flankGapX = 500; // Широко расставлены
+
+        // Нижняя линия NormalEnemy
+        enemies.add(new NormalEnemy(flankX, flankY, this));
+        enemies.add(new NormalEnemy(flankX + flankGapX, flankY, this));
+
+        // Дополнительная линия NormalEnemy, чтобы прикрыть центр снизу
+        enemies.add(new NormalEnemy(centerX - 50, flankY + 50, this));
+        enemies.add(new NormalEnemy(centerX + 50, flankY + 50, this));
     }
 
     public void updateEnemies(double dt, double worldW) {
         for (Enemy enemy : enemies){
             enemy.update(dt, worldW);
         }
+
+        checkEnemyCollisionsAndSeparate();
     }
     public void renderEnemies(GraphicsContext g){
         for (Enemy enemy : enemies){
@@ -98,5 +144,44 @@ public class EnemiesManager implements IShootHandler {
         }
 
         return false;
+    }
+    private void checkEnemyCollisionsAndSeparate() {
+        for (int i = 0; i < enemies.size(); i++) {
+            Enemy e1 = enemies.get(i);
+
+            for (int j = i + 1; j < enemies.size(); j++) {
+                Enemy e2 = enemies.get(j);
+
+                if (e1.checkEnemyCollision(e2)) {
+
+                    // Столкновение! Вычисляем перекрытие и корректируем позицию.
+                    double dx = e1.getX() - e2.getX();
+                    // Сумма полуширин
+                    double requiredDist = e1.getW() / 2.0 + e2.getW() / 2.0;
+                    // Вычисляем, насколько они перекрываются по X
+                    double overlapX = requiredDist - Math.abs(dx);
+
+                    if (overlapX > 0) {
+                        double correction = overlapX / 2.0 + 0.1; // Небольшой зазор 0.1
+
+                        // Двигаем объекты в разные стороны
+                        if (dx > 0)
+                        {
+                            e1.setX(e1.getX() + correction);
+                            e2.setX(e2.getX() - correction);
+                        }
+                        else
+                        {
+                            e1.setX(e1.getX() - correction);
+                            e2.setX(e2.getX() + correction);
+                        }
+
+                        // Меняем направление движения (отскок)
+                        e1.setVx(-e1.getVx());
+                        e2.setVx(-e2.getVx());
+                    }
+                }
+            }
+        }
     }
 }

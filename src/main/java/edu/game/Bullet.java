@@ -1,8 +1,6 @@
 package edu.game;
 
-import edu.subclasses.Assets;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
+import edu.subclasses.classes.Assets;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
@@ -18,8 +16,8 @@ public class Bullet {
     private final boolean byPlayer;
     private static final double OFFSCREEN_PADDING = 50.0;
 
-    private final Image sprite_enemy_bullet = Assets.getImage("bullet.png");
-    private final Image sprite_player_bullet = Assets.getImage("laser_bullet2.png");
+    private final Image sprite_enemy_bullet = Assets.getImage("bullet_green.png");
+    private final Image sprite_player_bullet = Assets.getImage("bullet_red.png");
 
     public Bullet(double x, double y, double vx, double vy, boolean byPlayer) {
         this.x = x;

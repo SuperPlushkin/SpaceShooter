@@ -1,7 +1,7 @@
 package edu.game;
 
-import edu.subclasses.IShootHandler;
-import edu.subclasses.Assets;
+import edu.subclasses.interfaces.IShootHandler;
+import edu.subclasses.classes.Assets;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -17,10 +17,10 @@ public abstract class Enemy {
     private double x;
     private double y;
     protected double w = 46;
-    private final double h = 38;
+    protected double h = 38;
 
     private double vx = 45; // пикс/сек вправо
-    private final double vy = 5; // пикс/сек вниз
+    private final double vy = 6; // пикс/сек вниз
 
     protected int MAX_HP = 3; // Максимальное здоровье противника
     protected int currentHP;        // Текущее здоровье противника
@@ -47,7 +47,7 @@ public abstract class Enemy {
     private final double DIAG_SPEED = ENEMY_BULLET_SPEED * Math.cos(Math.toRadians(45));
 
     // костюм
-    protected Image sprite = Assets.getImage("enemy_ship.png");
+    protected Image sprite = Assets.getImage("enemy_ship-standart.png");
 
     protected Enemy(double x, double y, IShootHandler shootHandler) {
         this.x = x;
@@ -58,19 +58,22 @@ public abstract class Enemy {
     }
 
     public void update(double dt, double worldW){
+
         x += vx * dt;
+        y += vy * dt;
 
         // отражаемся от краёв
-        if (x < 20) {
-            x = 20;
+        double halfW = w / 2.0;
+        double boundary = 20;
+
+        if (x - halfW < boundary) {
+            x = boundary + halfW;
             vx = -vx;
         }
-        else if (x + w > worldW - 20){
-            x = worldW - 20 - w;
+        else if (x + halfW > worldW - boundary){
+            x = worldW - boundary - halfW;
             vx = -vx;
         }
-        // можно добавить медленное спускание
-         y += vy * dt;
 
         tryShoot();
     }
@@ -156,9 +159,30 @@ public abstract class Enemy {
 
         return overlapX && overlapY;
     }
+    public boolean checkEnemyCollision(Enemy other) {
+        double halfW1 = this.w / 2.0;
+        double halfH1 = this.h / 2.0;
+        double halfW2 = other.w / 2.0;
+        double halfH2 = other.h / 2.0;
+
+        // Расстояние между центрами должно быть меньше суммы полуширин для коллизии по X
+        boolean overlapX = Math.abs(this.x - other.x) < (halfW1 + halfW2);
+        // Расстояние между центрами должно быть меньше суммы полувысот для коллизии по Y
+        boolean overlapY = Math.abs(this.y - other.y) < (halfH1 + halfH2);
+
+        return overlapX && overlapY;
+    }
 
     public boolean takeDamage(int damage) {
         currentHP -= damage;
         return currentHP <= 0;
     }
+
+
+    public double getX() { return x; }
+    public double getW() { return w; }
+    public double getVx() { return vx; }
+
+    public void setX(double x) { this.x = x; }
+    public void setVx(double vx) { this.vx = vx; }
 }

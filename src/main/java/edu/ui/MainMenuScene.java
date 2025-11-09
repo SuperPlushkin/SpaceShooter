@@ -1,6 +1,7 @@
 package edu.ui;
 
-import edu.subclasses.IScene;
+import edu.subclasses.classes.StylesHelper;
+import edu.subclasses.interfaces.IScene;
 import edu.subclasses.GameScenes;
 import edu.managers.ScenesManager;
 import javafx.geometry.Insets;
@@ -21,22 +22,33 @@ public class MainMenuScene implements IScene {
     }
 
     public Scene create() {
-        Label title = new Label("КОСМО ШУТЕР\n(Kirill Edition)"); // название в главном меню
-        title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-alignment: center;");
+        Label title = new Label("STAR WARS\n(Kirill Edition)");
+
+        StylesHelper.setLabelStyle(title, "-fx-text-fill: #FFD700; -fx-padding: 80 0 20 0;");
 
         Button start = new Button("СТАРТ");
         Button score = new Button("РЕКОРДЫ");
         Button author = new Button("АВТОР");
         Button exit = new Button("ВЫХОД");
 
-        start.setMaxWidth(Double.MAX_VALUE);
-        score.setMaxWidth(Double.MAX_VALUE);
-        author.setMaxWidth(Double.MAX_VALUE);
-        exit.setMaxWidth(Double.MAX_VALUE);
+        StylesHelper.addBaseHoverPressEffects(start);
+        StylesHelper.addBaseHoverPressEffects(score);
+        StylesHelper.addBaseHoverPressEffects(author);
+        StylesHelper.addBaseHoverPressEffects(exit);
+
+        start.setMaxWidth(200);
+        score.setMaxWidth(200);
+        author.setMaxWidth(200);
+        exit.setMaxWidth(200);
 
         VBox box = new VBox(16, title, start, score, author, exit);
         box.setPadding(new Insets(24));
         box.setAlignment(Pos.TOP_CENTER);
+        box.setStyle(
+            "-fx-background-image: url('background_stars-for-wars.jpg'); " +
+            "-fx-background-size: cover; " +
+            "-fx-background-position: center center;"
+        );
 
         Scene scene = new Scene(box, scenesManager.WIDTH, scenesManager.HEIGHT);
         start.setOnAction(e -> scenesManager.set(GameScenes.GameScene));

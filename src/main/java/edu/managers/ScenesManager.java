@@ -2,7 +2,7 @@ package edu.managers;
 
 import edu.subclasses.GameScenes;
 import edu.ui.GameScene;
-import edu.subclasses.IScene;
+import edu.subclasses.interfaces.IScene;
 import edu.ui.AuthorScene;
 import edu.ui.HighScoreScene;
 import edu.ui.MainMenuScene;

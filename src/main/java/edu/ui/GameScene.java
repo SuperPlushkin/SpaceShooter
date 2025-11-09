@@ -1,11 +1,11 @@
 package edu.ui;
 
-import edu.subclasses.IScene;
+import edu.subclasses.interfaces.IScene;
 import edu.subclasses.GameScenes;
-import edu.subclasses.Keys;
+import edu.subclasses.classes.Keys;
 import edu.managers.ScenesManager;
 import edu.managers.LevelsManager;
-import edu.subclasses.StylesHelper;
+import edu.subclasses.classes.StylesHelper;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -154,7 +154,7 @@ public class GameScene implements IScene {
     }
     public VBox makeLoseMenu(){
 
-        Label gameOverTitle = new Label("Ваш корабль взорвали!");
+        Label gameOverTitle = new Label("Проклятые повстанцы\nпобедили!");
         StylesHelper.setLabelStyle(gameOverTitle, "-fx-text-fill: red;");
 
         loseStatsLabel = new Label(); // Для отображения статистики
@@ -184,15 +184,18 @@ public class GameScene implements IScene {
         winStatsLabel = new Label(); // Для отображения статистики
         StylesHelper.setSubLabelStyle(winStatsLabel);
 
+        Button restartBtn = new Button("Начать с первого уровня");
         Button toMenuBtn = new Button("В главное меню");
 
+        StylesHelper.addBaseHoverPressEffects(restartBtn);
         StylesHelper.addBaseHoverPressEffects(toMenuBtn);
 
-        VBox menu = new VBox(15, winTitle, winStatsLabel, toMenuBtn);
+        VBox menu = new VBox(15, winTitle, winStatsLabel, restartBtn, toMenuBtn);
         StylesHelper.setMenuStyle(menu);
 
         setMenuVisibility(menu, false);
 
+        restartBtn.setOnAction(e -> startGame());
         toMenuBtn.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
 
         return menu;

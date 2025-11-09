@@ -1,4 +1,4 @@
-package edu.subclasses;
+package edu.subclasses.interfaces;
 
 public interface IGameActionsHandler {
     public void restartActiveLevel();

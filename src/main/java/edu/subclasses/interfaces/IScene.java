@@ -1,4 +1,4 @@
-package edu.subclasses;
+package edu.subclasses.interfaces;
 
 import javafx.scene.Scene;
 

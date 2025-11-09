@@ -1,8 +1,9 @@
 package edu.game;
 
-import edu.subclasses.IGameActionsHandler;
-import edu.subclasses.IShootHandler;
-import edu.subclasses.Assets;
+import edu.subclasses.classes.Keys;
+import edu.subclasses.interfaces.IGameActionsHandler;
+import edu.subclasses.interfaces.IShootHandler;
+import edu.subclasses.classes.Assets;
 import edu.managers.LevelsManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -37,7 +38,7 @@ public class Player {
     private int consecutiveShots = 0; // Счетчик выстрелов в текущей серии
     private long cooldownEndTime = 0; // Наносекунда окончания кулдауна
 
-    private final Image sprite = Assets.getImage("kirill_ship.png");
+    private final Image sprite = Assets.getImage("player_ship.png");
 
     public Player(double startX, double startY, LevelsManager levelsManager) {
         this.x = startX;
@@ -62,7 +63,7 @@ public class Player {
         this.consecutiveShots = 0;
         this.cooldownEndTime = 0;
     }
-    public void update (double dt, long now, edu.subclasses.Keys keys, double W, double H){
+    public void update (double dt, long now, Keys keys, double W, double H){
 
         double vx = 0, vy = 0;
         double speed = 400; // пикс/сек
@@ -127,7 +128,7 @@ public class Player {
 
         // отрисовка имени
         g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-        g.setFill(Color.DARKRED);
+        g.setFill(Color.GOLD);
         g.setTextAlign(TextAlignment.CENTER);
 
         double textY = y - h / 2 - 5;
@@ -174,10 +175,13 @@ public class Player {
             if (lives == 0)
             {
                 actionsHandler.endGame(false);
+                hp = 0;
             }
-            else actionsHandler.restartActiveLevel();
-
-            hp = MAX_HP;
+            else
+            {
+                actionsHandler.restartActiveLevel();
+                hp = MAX_HP;
+            }
         }
         else hp -= minus_hp;
     }

@@ -1,9 +1,8 @@
 package edu.managers;
 
 import edu.ui.GameScene;
-import edu.subclasses.IGameActionsHandler;
-import edu.subclasses.IShootHandler;
-import edu.subclasses.PauseType;
+import edu.subclasses.interfaces.IGameActionsHandler;
+import edu.subclasses.interfaces.IShootHandler;
 import edu.game.Bullet;
 import edu.game.Level;
 import edu.game.Player;
@@ -27,6 +26,13 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private AnimationTimer loop;
     private boolean paused = false; // Оставляем 'paused' для удобства в AnimationTimer
     private PauseType pauseType = PauseType.None;
+
+    private enum PauseType {
+        None,               // Игра идет
+        JustPause,          // Обычная пауза (по ESC)
+        GameOver,           // Игра окончена (проигрыш/победа)
+        ShowingLevelResults // Показ промежуточных результатов после уровня
+    }
 
     private int totalEnemiesKilled = 0;
     private double totalGameTime = 0;
@@ -116,6 +122,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private void initLevels() {
         levels.add(new Level(this, 1));
         levels.add(new Level(this, 2));
+        levels.add(new Level(this, 3));
 
         activeLevel = levels.getFirst();
     }
@@ -228,5 +235,12 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     }
     public String getFormatedCompletedLevels(int activeLevelIndex){
         return activeLevelIndex + "/" + levels.size();
+    }
+
+    public double getW() {
+        return W;
+    }
+    public double getH() {
+        return H;
     }
 }

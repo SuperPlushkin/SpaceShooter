@@ -1,11 +1,13 @@
 package edu.game;
 
-import edu.subclasses.ILevelActionsHandler;
-import edu.subclasses.IShootHandler;
+import edu.subclasses.classes.Assets;
+import edu.subclasses.interfaces.ILevelActionsHandler;
+import edu.subclasses.interfaces.IShootHandler;
 import edu.managers.BulletsManager;
 import edu.managers.EnemiesManager;
 import edu.managers.LevelsManager;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,8 @@ public class Level implements IShootHandler, ILevelActionsHandler {
     private final LevelsManager levelsManager;
     private final EnemiesManager enemiesManager;
     private final BulletsManager bulletsManager;
+
+    protected Image sprite = Assets.getImage("background_stars-for-wars.jpg");
 
     public Level (LevelsManager levelsManager, int enemySeed) {
         this.levelsManager = levelsManager;
@@ -41,6 +45,8 @@ public class Level implements IShootHandler, ILevelActionsHandler {
     public void render (GraphicsContext g, double worldW, double worldH){
         g.setFill(Color.WHITE);
         g.fillRect(0, 0, worldW, worldH);
+
+        g.drawImage(sprite, 0, 35, worldW, worldH - 35);
 
         enemiesManager.renderEnemies(g);
         bulletsManager.renderBullets(g);
