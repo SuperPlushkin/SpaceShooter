@@ -39,7 +39,7 @@ public class HighScoreScene implements IScene {
             "-fx-background-position: center center;"
         );
 
-        Scene scene = new Scene(root, scenesManager.WIDTH, scenesManager.HEIGHT);
+        Scene scene = new Scene(root, scenesManager.getW(), scenesManager.getH());
         back.setOnAction(e -> scenesManager.set(GameScenes.MainMenuScene));
         return scene;
     }

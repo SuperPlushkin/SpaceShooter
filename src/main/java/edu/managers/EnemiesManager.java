@@ -2,10 +2,10 @@ package edu.managers;
 
 import edu.game.FatEnemy;
 import edu.game.NormalEnemy;
+import edu.game.Enemy;
+import edu.subclasses.interfaces.IHaveSize;
 import edu.subclasses.interfaces.ILevelActionsHandler;
 import edu.subclasses.interfaces.IShootHandler;
-import edu.game.Bullet;
-import edu.game.Enemy;
 import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,6 +34,8 @@ public class EnemiesManager implements IShootHandler {
         else if (levelId == 3)
             spawnEnemiesVersion3();
     }
+
+    // функции спавна противников не сам делал, потому что это запарно, потом если захочу, сам сделаю
     public void spawnEnemiesVersion1() {
         int row = 4;
         int cols = 5;
@@ -102,9 +104,9 @@ public class EnemiesManager implements IShootHandler {
         enemies.add(new NormalEnemy(centerX + 50, flankY + 50, this));
     }
 
-    public void updateEnemies(double dt, double worldW) {
+    public void updateEnemies(double dt, double worldW, double worldH) {
         for (Enemy enemy : enemies){
-            enemy.update(dt, worldW);
+            enemy.update(dt, worldW, worldH);
         }
 
         checkEnemyCollisionsAndSeparate();
@@ -124,25 +126,20 @@ public class EnemiesManager implements IShootHandler {
     public void makeShoot(double x, double y, double vx, double vy, boolean byPlayer){
         shootHandler.makeShoot(x, y, vx, vy, byPlayer);
     }
-    public boolean checkBulletCollision(Bullet bullet){
-        if (!bullet.isByPlayer())
-            return false;
-
+    public boolean checkObjectCollisionOnEnemies(IHaveSize object, int damage_on_hit){
         Iterator<Enemy> iterator = enemies.iterator();
         while (iterator.hasNext()) {
             Enemy enemy = iterator.next();
 
-            if (enemy.checkBulletCollision(bullet)) {
+            if (enemy.checkCollisionWithObject(object)) {
 
-                if (enemy.takeDamage(1)) {
+                if (enemy.takeDamage(damage_on_hit)) {
                     iterator.remove();
-                    levelsActions.enemyKilled();
+                    levelsActions.onEnemyKilled();
                 }
-
                 return true;
             }
         }
-
         return false;
     }
     private void checkEnemyCollisionsAndSeparate() {
@@ -152,7 +149,7 @@ public class EnemiesManager implements IShootHandler {
             for (int j = i + 1; j < enemies.size(); j++) {
                 Enemy e2 = enemies.get(j);
 
-                if (e1.checkEnemyCollision(e2)) {
+                if (e1.checkCollisionWithObject(e2)) {
 
                     // Столкновение! Вычисляем перекрытие и корректируем позицию.
                     double dx = e1.getX() - e2.getX();
@@ -183,5 +180,11 @@ public class EnemiesManager implements IShootHandler {
                 }
             }
         }
+    }
+    public boolean checkIfAnyEnemyReachedY(double defeatLineY) {
+        return enemies.stream().anyMatch(enemy -> enemy.getY() + enemy.getH() / 2.0 >= defeatLineY);
+    }
+    public double getHighestEnemyY() {
+        return enemies.isEmpty() ? -1 : enemies.stream().mapToDouble(Enemy::getY).min().getAsDouble();
     }
 }

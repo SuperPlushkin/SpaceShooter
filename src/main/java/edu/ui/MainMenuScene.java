@@ -50,7 +50,7 @@ public class MainMenuScene implements IScene {
             "-fx-background-position: center center;"
         );
 
-        Scene scene = new Scene(box, scenesManager.WIDTH, scenesManager.HEIGHT);
+        Scene scene = new Scene(box, scenesManager.getW(), scenesManager.getH());
         start.setOnAction(e -> scenesManager.set(GameScenes.GameScene));
         score.setOnAction(e -> scenesManager.set(GameScenes.HighScoreScene));
         author.setOnAction(e -> scenesManager.set(GameScenes.AuthorScene));

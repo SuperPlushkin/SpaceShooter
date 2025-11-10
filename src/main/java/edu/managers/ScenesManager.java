@@ -8,11 +8,15 @@ import edu.ui.HighScoreScene;
 import edu.ui.MainMenuScene;
 import javafx.stage.Stage;
 
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class ScenesManager {
 
     public Stage primary;
-    public int WIDTH;
-    public int HEIGHT;
+    private int WIDTH;
+    private int HEIGHT;
 
     private GameScene gameScene;
     private AuthorScene authorScene;
@@ -26,21 +30,23 @@ public class ScenesManager {
         WIDTH = width;
         HEIGHT = height;
 
+        stage.setWidth(WIDTH);
+        stage.setHeight(HEIGHT);
+
         gameScene = new GameScene(this);
         authorScene = new AuthorScene(this);
         highScoreScene = new HighScoreScene(this);
         mainMenuScene = new MainMenuScene(this);
-    }
 
+        stage.centerOnScreen();
+    }
     public void set (GameScenes typeScene){
 
         if (typeScene == GameScenes.GameScene && currentScene != GameScenes.GameScene) {
-            // Останавливаем игровую сцену, если переключаемся с нее
-            gameScene.startGame();
+            gameScene.startGame(); // Запускаем игровую сцену, если переключаемся на нее
         }
         else if (currentScene == GameScenes.GameScene && typeScene != GameScenes.GameScene) {
-            // Запускаем игровую сцену, если переключаемся на нее
-            gameScene.stopGame();
+            gameScene.stopGame(); // Останавливаем игровую сцену, если переключаемся с нее
         }
 
         IScene scene = switch (typeScene){
@@ -50,9 +56,40 @@ public class ScenesManager {
             case MainMenuScene -> mainMenuScene;
         };
 
-        currentScene = typeScene; // Обновляем текущую сцену
+        currentScene = typeScene;
         primary.setScene(scene.getScene());
-        primary.centerOnScreen();
+    }
+    public void startResizeTimer(Stage stage) {
+        Timer timer = new Timer();
+        Random random = new Random();
+
+        TimerTask resizeTask = new TimerTask() {
+            @Override
+            public void run() {
+                int newWidth = 400 + random.nextInt(1001);
+                int newHeight = 400 + random.nextInt(1001);
+
+                synchronized (ScenesManager.this) {
+                    WIDTH = newWidth;
+                    HEIGHT = newHeight;
+
+                    stage.setWidth(WIDTH);
+                    stage.setHeight(HEIGHT);
+
+                    System.out.println("Размеры изменены:");
+                    System.out.println("WIDTH: " + WIDTH + " | HEIGHT: " + HEIGHT);
+                }
+            }
+        };
+
+        timer.schedule(resizeTask, 0, 4000);
+    }
+
+    public double getW(){
+        return primary.getWidth();
+    }
+    public double getH(){
+        return primary.getHeight();
     }
 }
 

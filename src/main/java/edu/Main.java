@@ -10,15 +10,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage){
+
+        var sceneController = new ScenesManager();
+        sceneController.init(stage, 550, 800); // размер игрового поля
+        sceneController.set(GameScenes.MainMenuScene);
+
         stage.setTitle("STAR WARS (Kirill Edition)");
         stage.getIcons().add(Assets.getImage("LOGO_DEATH_STAR.png"));
         stage.setResizable(false);
         stage.setAlwaysOnTop(true);
-
-        var sceneController = new ScenesManager();
-        sceneController.init(stage, 520, 580); // размер игрового поля
-        sceneController.set(GameScenes.MainMenuScene);
-
         stage.show();
     }
 

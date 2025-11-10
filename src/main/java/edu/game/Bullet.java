@@ -1,10 +1,12 @@
 package edu.game;
 
 import edu.subclasses.classes.Assets;
+import edu.subclasses.interfaces.IHaveSize;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
-public class Bullet {
+public class Bullet implements IHaveSize {
+
     private double x;
     private double y;
     private double vx;
@@ -57,6 +59,14 @@ public class Bullet {
         g.restore();
     }
 
+    public boolean isByPlayer() {
+        return byPlayer;
+    }
+    public boolean isOffscreen(double worldW, double worldH) {
+        return y < - OFFSCREEN_PADDING || y > worldH + OFFSCREEN_PADDING ||
+               x < - OFFSCREEN_PADDING || x > worldW + OFFSCREEN_PADDING; // Пока что колхоз
+    }
+
     public double getX() {
         return x;
     }
@@ -68,13 +78,5 @@ public class Bullet {
     }
     public double getH() {
         return h;
-    }
-
-    public boolean isByPlayer() {
-        return byPlayer;
-    }
-    public boolean isOffscreen() {
-        return y < - OFFSCREEN_PADDING || y > 580 + OFFSCREEN_PADDING ||
-               x < - OFFSCREEN_PADDING || x > 520 + OFFSCREEN_PADDING; // Пока что колхоз
     }
 }

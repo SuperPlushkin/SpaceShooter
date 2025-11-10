@@ -15,8 +15,8 @@ public final class FatEnemy extends Enemy {
         this.h = this.h * 2;
         this.MAX_HP = 6;
         this.currentHP = MAX_HP;
-        this.MIN_DELAY_MS = this.MIN_DELAY_MS * 0.25;
-        this.MAX_DELAY_MS = this.MAX_DELAY_MS * 0.25;
-        this.sprite = Assets.getImage("enemy_ship-sokol.png"); // временно обычный спрайт
+        this.MIN_DELAY_MS = this.MIN_DELAY_MS * 0.5;
+        this.MAX_DELAY_MS = this.MAX_DELAY_MS * 0.5;
+        this.sprite = Assets.getImage("enemy_ship-sokol.png");
     }
 }

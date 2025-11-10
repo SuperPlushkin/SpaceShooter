@@ -1,5 +1,6 @@
 package edu.game;
 
+import edu.subclasses.interfaces.IHaveSize;
 import edu.subclasses.interfaces.IShootHandler;
 import edu.subclasses.classes.Assets;
 import javafx.scene.canvas.GraphicsContext;
@@ -10,9 +11,9 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import java.util.Random;
 
-public abstract class Enemy {
+public abstract class Enemy implements IHaveSize {
 
-    private IShootHandler shootHandler;
+    private final IShootHandler shootHandler;
 
     private double x;
     private double y;
@@ -20,7 +21,6 @@ public abstract class Enemy {
     protected double h = 38;
 
     private double vx = 45; // пикс/сек вправо
-    private final double vy = 6; // пикс/сек вниз
 
     protected int MAX_HP = 3; // Максимальное здоровье противника
     protected int currentHP;        // Текущее здоровье противника
@@ -38,8 +38,8 @@ public abstract class Enemy {
     };
 
     // Стрельба
-    protected double MIN_DELAY_MS = 500; // Минимальная задержка (миллисекунды)
-    protected double MAX_DELAY_MS = 1500; // Максимальная задержка (миллисекунды)
+    protected double MIN_DELAY_MS = 375; // Минимальная задержка (миллисекунды)
+    protected double MAX_DELAY_MS = 1125; // Максимальная задержка (миллисекунды)
     private static final double SHOOT_CHANCE = 0.35; // шанс выстрелить
     private static final Random random = new Random();
     private long nextAttemptTime = System.currentTimeMillis() + 1500;
@@ -57,7 +57,10 @@ public abstract class Enemy {
         this.currentHP = MAX_HP;
     }
 
-    public void update(double dt, double worldW){
+    public void update(double dt, double worldW, double worldH){
+
+        // пикс/сек вниз
+        double vy = 8 * (worldH / 800); // 800 пикселей бралось за стандарт экрана, поэтому вот так. 8 - просто скорость противника базовое
 
         x += vx * dt;
         y += vy * dt;
@@ -122,65 +125,59 @@ public abstract class Enemy {
         }
     }
     public void shootRandomly() {
-        double vx_bullet = 0;
-        double vy_bullet = 0;
 
         int direction = random.nextInt(4);
 
-        switch (direction) {
-            case 0: // Вниз-влево
+        double vx_bullet = 0;
+        double vy_bullet = switch (direction) {
+            case 0 -> {
                 vx_bullet = -DIAG_SPEED;
-                vy_bullet = DIAG_SPEED;
-                break;
-            case 1, 2: // Прямо вниз
+                yield DIAG_SPEED;
+            }
+            case 1, 2 -> {
                 vx_bullet = 0;
-                vy_bullet = ENEMY_BULLET_SPEED;
-                break;
-            case 3: // Вниз-вправо
+                yield ENEMY_BULLET_SPEED;
+            }
+            case 3 -> {
                 vx_bullet = DIAG_SPEED;
-                vy_bullet = DIAG_SPEED;
-                break;
-        }
+                yield DIAG_SPEED;
+            }
+            default -> 0;
+        };
 
         shootHandler.makeShoot(x, y + h / 2, vx_bullet, vy_bullet, false);
     }
 
-    public boolean checkBulletCollision(Bullet bullet){
-        double b_halfW = bullet.getW() / 2.0;
-        double b_halfH = bullet.getH() / 2.0;
-        double b_x = bullet.getX();
-        double b_y = bullet.getY();
+    public boolean checkCollisionWithObject(IHaveSize object){
+        double obj_halfW = object.getW() / 2.0;
+        double obj_halfH = object.getH() / 2.0;
+        double obj_x = object.getX();
+        double obj_y = object.getY();
 
-        double e_halfW = this.w / 2.0;
-        double e_halfH = this.h / 2.0;
+        double halfW = this.w / 2.0;
+        double halfH = this.h / 2.0;
 
-        boolean overlapX = (b_x + b_halfW >= this.x - e_halfW) && (b_x - b_halfW <= this.x + e_halfW);
-        boolean overlapY = (b_y + b_halfH >= this.y - e_halfH) && (b_y- b_halfH <= this.y + e_halfH);
-
-        return overlapX && overlapY;
-    }
-    public boolean checkEnemyCollision(Enemy other) {
-        double halfW1 = this.w / 2.0;
-        double halfH1 = this.h / 2.0;
-        double halfW2 = other.w / 2.0;
-        double halfH2 = other.h / 2.0;
-
-        // Расстояние между центрами должно быть меньше суммы полуширин для коллизии по X
-        boolean overlapX = Math.abs(this.x - other.x) < (halfW1 + halfW2);
-        // Расстояние между центрами должно быть меньше суммы полувысот для коллизии по Y
-        boolean overlapY = Math.abs(this.y - other.y) < (halfH1 + halfH2);
+        boolean overlapX = (obj_x + obj_halfW >= this.x - halfW) && (obj_x - obj_halfW <= this.x + halfW);
+        boolean overlapY = (obj_y + obj_halfH >= this.y - halfH) && (obj_y- obj_halfH <= this.y + halfH);
 
         return overlapX && overlapY;
     }
-
     public boolean takeDamage(int damage) {
+
+        if (damage == -1) return dieInstantly();
+
         currentHP -= damage;
         return currentHP <= 0;
+    }
+    public boolean dieInstantly() {
+        return takeDamage(currentHP);
     }
 
 
     public double getX() { return x; }
+    public double getY() { return y; }
     public double getW() { return w; }
+    public double getH() { return h; }
     public double getVx() { return vx; }
 
     public void setX(double x) { this.x = x; }

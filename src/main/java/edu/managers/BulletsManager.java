@@ -7,16 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 
 public class BulletsManager {
-
     private final List<Bullet> bullets = new ArrayList<>();
 
-    public void updateBullets (double dt){
+    public void updateBullets (double dt, double worldW, double worldH){
         Iterator<Bullet> it = bullets.iterator();
         while(it.hasNext()){
             Bullet b = it.next();
             b.update(dt);
 
-            if (b.isOffscreen()){
+            if (b.isOffscreen(worldW, worldH)){
                 it.remove();
             }
         }

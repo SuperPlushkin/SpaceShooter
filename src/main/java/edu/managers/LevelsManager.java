@@ -13,9 +13,6 @@ import java.util.List;
 
 public class LevelsManager implements IShootHandler, IGameActionsHandler {
 
-    private final double W;
-    private final double H;
-
     private final GameScene gameScene;
 
     private final Player player;
@@ -24,7 +21,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private int activeLevelIndex = 0;
 
     private AnimationTimer loop;
-    private boolean paused = false; // Оставляем 'paused' для удобства в AnimationTimer
+    private boolean paused = false; // Оставляем 'paused' для удобства в makeUpdateTimer()
     private PauseType pauseType = PauseType.None;
 
     private enum PauseType {
@@ -40,22 +37,14 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private double currentLevelTime = 0;
 
     public LevelsManager (double startXPlayer, double startYPlayer, GraphicsContext g, GameScene gameScene) {
-        player = new Player(startXPlayer, startYPlayer, this);
+        this.player = new Player(startXPlayer, startYPlayer, this);
         this.gameScene = gameScene;
-        W = gameScene.getW();
-        H = gameScene.getH();
 
         initLevels(); // Создаем уровни при инициализации
         makeUpdateTimer(g);
+        loop.start();
     }
 
-    private void updateLoopState() {
-        if (paused)
-        {
-            loop.stop();
-        }
-        else loop.start();
-    }
     private void makeUpdateTimer (GraphicsContext g){
         loop = new AnimationTimer() {
             long prev = 0;
@@ -76,15 +65,17 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
                     totalGameTime += dt;
                     currentLevelTime += dt;
 
-                    gameScene.updateStatsInfo(totalEnemiesKilled, totalGameTime); // ну хезехезе
+                    checkLevelWin();
 
-                    activeLevel.update(dt, W);
-                    player.update(dt, now, keys, W, H);
+                    double highestEnemyByY = activeLevel.update(dt, getW(), getH());
+                    player.update(highestEnemyByY, dt, now, keys, getW(), getH() - 40); // колхоз с минус 40 убрать надо
 
-                    checkPlayerBulletCollision();
+                    checkPlayerCollision();
+
+                    gameScene.updateStatsInfo(totalEnemiesKilled, totalGameTime);
                 }
 
-                activeLevel.render(g, W, H);
+                activeLevel.render(g, getW(), getH());
                 player.render(g);
             }
         };
@@ -120,8 +111,8 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     }
 
     private void initLevels() {
-        levels.add(new Level(this, 1));
         levels.add(new Level(this, 2));
+        levels.add(new Level(this, 1));
         levels.add(new Level(this, 3));
 
         activeLevel = levels.getFirst();
@@ -154,7 +145,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private void makePause(PauseType newPauseType){
         pauseType = newPauseType;
         paused = newPauseType != PauseType.None;
-        updateLoopState();
+//        updateLoopState();
     }
     public void togglePause() {
         if (pauseType == PauseType.GameOver || pauseType == PauseType.ShowingLevelResults)
@@ -171,29 +162,47 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
         }
     }
 
-    public void enemyKilled() {
-        totalEnemiesKilled++;
-        levelEnemiesKilled++;
-        gameScene.updateStatsInfo(totalEnemiesKilled, totalGameTime);
-    }
     public void makeShoot(double x, double y, double vx, double vy, boolean byPlayer){
         if (activeLevel != null) {
             activeLevel.makeShoot(x, y, vx, vy, byPlayer);
         }
     }
-    public void checkPlayerBulletCollision() {
-        if (activeLevel == null)
-            return;
 
+    public void onPlayerMinusLive(){
+        restartActiveLevel();
+    }
+    public void onPlayerDead(){
+        endGame(false);
+    }
+    public void failLevelByEnemiesReachingBottom() {
+        endGame(false);
+    }
+    public void onEnemyKilled() {
+        totalEnemiesKilled++;
+        levelEnemiesKilled++;
+        gameScene.updateStatsInfo(totalEnemiesKilled, totalGameTime);
+    }
+
+    public void checkPlayerCollision() {
+
+        // Игрок столкнулся с врагом -> Мгновенная смерть
+        if (activeLevel.checkObjectCollisionOnEnemiesAndDieInstantly(player)){
+            player.dieInstantly();
+            return;
+        }
+
+        var bulletsLeft = activeLevel.checkBulletCollisionOnEnemies();
         var bulletsToDelete = new ArrayList<Integer>();
-        var bulletsLeft = activeLevel.checkBulletCollision();
 
         for (int i = 0; i < bulletsLeft.size(); i++) {
             Bullet bullet = bulletsLeft.get(i);
 
-            if (player.checkBulletCollision(bullet)) {
+            if(bullet.isByPlayer())
+                continue;
+
+            if (player.checkCollisionWithObject(bullet)) {
                 bulletsToDelete.add(i);
-                player.minusHP(1);
+                player.minusHP(1); // Колхоз надо убрать. Надо брать урон из пули
                 gameScene.updatePlayerInfo(player.getLives(), player.getHp());
             }
         }
@@ -205,7 +214,6 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
             }
         }
     }
-
     public void checkLevelWin() {
         if (!activeLevel.isCompleted())
             return;
@@ -238,9 +246,9 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     }
 
     public double getW() {
-        return W;
+        return gameScene.getW();
     }
     public double getH() {
-        return H;
+        return gameScene.getH();
     }
 }

@@ -1,11 +1,12 @@
 package edu.game;
 
 import edu.subclasses.classes.Assets;
+import edu.subclasses.interfaces.IGameActionsHandler;
+import edu.subclasses.interfaces.IHaveSize;
 import edu.subclasses.interfaces.ILevelActionsHandler;
 import edu.subclasses.interfaces.IShootHandler;
 import edu.managers.BulletsManager;
 import edu.managers.EnemiesManager;
-import edu.managers.LevelsManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -14,16 +15,19 @@ import java.util.List;
 
 public class Level implements IShootHandler, ILevelActionsHandler {
 
-    private final LevelsManager levelsManager;
+    private final IGameActionsHandler gameActions;
     private final EnemiesManager enemiesManager;
     private final BulletsManager bulletsManager;
 
+    private double defeatLineY = 0;
+    private final double percentOfDefeatLineY = 0.75;
+
     protected Image sprite = Assets.getImage("background_stars-for-wars.jpg");
 
-    public Level (LevelsManager levelsManager, int enemySeed) {
-        this.levelsManager = levelsManager;
-        enemiesManager = new EnemiesManager(this, this, enemySeed);
-        bulletsManager = new BulletsManager();
+    public Level (IGameActionsHandler gameActions, int enemySeed) {
+        this.gameActions = gameActions;
+        this.enemiesManager = new EnemiesManager(this, this, enemySeed);
+        this.bulletsManager = new BulletsManager();
     }
 
     public void spawnEnemies(){
@@ -34,51 +38,80 @@ public class Level implements IShootHandler, ILevelActionsHandler {
         enemiesManager.clearEnemies();
     }
 
-    public void update(double dt, double worldW){
-        enemiesManager.updateEnemies(dt, worldW);
-        bulletsManager.updateBullets(dt);
+    public double update(double dt, double worldW, double worldH) {
 
-        checkBulletCollision();
+        if (defeatLineY == 0 || defeatLineY != worldH * percentOfDefeatLineY) {
+            this.defeatLineY = worldH * percentOfDefeatLineY;
+        }
 
-        levelsManager.checkLevelWin();
+        enemiesManager.updateEnemies(dt, worldW, worldH);
+        bulletsManager.updateBullets(dt, worldW, worldH);
+
+        checkBulletCollisionOnEnemies();
+
+        // СТОЛКНОВЕНИЕ С ПОЛОМ
+        if (enemiesManager.checkIfAnyEnemyReachedY(defeatLineY))
+        {
+            gameActions.failLevelByEnemiesReachingBottom();
+            return -1;
+        }
+        else return enemiesManager.getHighestEnemyY();
     }
     public void render (GraphicsContext g, double worldW, double worldH){
         g.setFill(Color.WHITE);
-        g.fillRect(0, 0, worldW, worldH);
+        g.fillRect(0, 0, 5000, 5000);
 
         g.drawImage(sprite, 0, 35, worldW, worldH - 35);
 
         enemiesManager.renderEnemies(g);
         bulletsManager.renderBullets(g);
+
+
+        // РИСОВАНИЕ ЛИНИИ ПОРАЖЕНИЯ
+        g.save();
+        g.setGlobalAlpha(0.4);
+        g.setStroke(Color.WHITE);
+        g.setLineWidth(2);
+        g.setLineDashes(10, 5);
+        g.strokeLine(0, defeatLineY, worldW, defeatLineY);
+        g.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 14));
+        g.setFill(Color.WHITE);
+        g.setTextAlign(javafx.scene.text.TextAlignment.CENTER);
+        g.fillText("Линия поражения", worldW / 2, defeatLineY - 10);
+        g.restore();
     }
 
     public void makeShoot(double x, double y, double vx, double vy, boolean byPlayer){
         bulletsManager.makeBullet(x, y, vx, vy, byPlayer);
     }
-    public List<Bullet> checkBulletCollision() {
+    public List<Bullet> checkBulletCollisionOnEnemies() {
         var bullets = bulletsManager.getBullets();
         var bulletsToDelete = new ArrayList<Integer>();
 
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
 
-            if (enemiesManager.checkBulletCollision(bullet))
+            if (!bullet.isByPlayer())
+                continue;
+
+            if (enemiesManager.checkObjectCollisionOnEnemies(bullet, 1))
                 bulletsToDelete.add(i);
         }
 
         for (int i = bulletsToDelete.size() - 1; i >= 0; i--) {
-            int index = bulletsToDelete.get(i);
-            if (index < bullets.size()){
-                bullets.remove(index);
-            }
+            bullets.remove((int)bulletsToDelete.get(i));
         }
 
         return bullets;
     }
+    public boolean checkObjectCollisionOnEnemiesAndDieInstantly(IHaveSize object) {
+        return enemiesManager.checkObjectCollisionOnEnemies(object, -1);
+    }
+
     public boolean isCompleted() {
         return enemiesManager.areEnemiesEmpty();
     }
-    public void enemyKilled(){
-        levelsManager.enemyKilled();
+    public void onEnemyKilled(){
+        gameActions.onEnemyKilled();
     }
 }

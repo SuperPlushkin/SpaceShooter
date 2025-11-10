@@ -23,9 +23,6 @@ import javafx.scene.paint.Color;
 
 public class GameScene implements IScene {
 
-    private final double W;
-    private final double H;
-
     private final ScenesManager scenesManager;
     private final Scene MyScene;
     private GraphicsContext g;
@@ -52,16 +49,14 @@ public class GameScene implements IScene {
 
     public GameScene(ScenesManager scenesManager) {
         this.scenesManager = scenesManager;
-        this.W = scenesManager.WIDTH;
-        this.H = scenesManager.HEIGHT;
 
         MyScene = createScene();
         // ВАЖНО: точка 'g' инициализируется внутри createScene(), поэтому LevelsManager должен быть создан после него.
-        levelsManager = new LevelsManager(W / 2.0, H - 140, g, this);
+        levelsManager = new LevelsManager(getW() / 2.0, getH() - 140, g, this);
     }
 
     private Scene createScene() {
-        Canvas canvas = new Canvas(W, H);
+        Canvas canvas = new Canvas(getW(), getH());
         g = canvas.getGraphicsContext2D();
         g.setImageSmoothing(true);
 
@@ -76,7 +71,10 @@ public class GameScene implements IScene {
 
         // Инициализации самой сцены
         StackPane root = new StackPane(canvas, infoTopBox, pauseMenu, levelCompleteMenu, loseMenu, winMenu);
-        Scene scene = new Scene(root, W, H, Color.WHITE);
+        Scene scene = new Scene(root, getW(), getH(), Color.WHITE);
+
+        canvas.widthProperty().bind(root.widthProperty());
+        canvas.heightProperty().bind(root.heightProperty());
 
         // обработчик нажатий клавиш
         scene.setOnKeyPressed(e -> {
@@ -290,15 +288,16 @@ public class GameScene implements IScene {
     public void clearPressedKeys() {
         pressedKeys.clearKeys();
     }
-    public double getW() {
-        return W;
-    }
-    public double getH() {
-        return H;
-    }
 
     public Scene getScene(){
         return MyScene;
+    }
+
+    public double getW() {
+        return scenesManager.getW();
+    }
+    public double getH() {
+        return scenesManager.getH();
     }
 
     private static String formatTime(double timeSeconds) {
@@ -319,9 +318,11 @@ public class GameScene implements IScene {
     }
     private static void setStatisticsLabel(String levelCompletedInfo, double totalTime, double levelTime, Label statsLabel) {
         var stats = String.format(
-            "Общее время: %s\n" +
-            "Время уровня: %s\n" +
-            "Пройдено уровней: %s\n",
+            """
+            Общее время: %s
+            Время уровня: %s
+            Пройдено уровней: %s
+            """,
             formatTime(totalTime), formatTime(levelTime), levelCompletedInfo
         );
 

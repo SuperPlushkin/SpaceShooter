@@ -2,6 +2,7 @@ package edu.game;
 
 import edu.subclasses.classes.Keys;
 import edu.subclasses.interfaces.IGameActionsHandler;
+import edu.subclasses.interfaces.IHaveSize;
 import edu.subclasses.interfaces.IShootHandler;
 import edu.subclasses.classes.Assets;
 import edu.managers.LevelsManager;
@@ -13,7 +14,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 
-public class Player {
+public class Player implements IHaveSize {
 
     private final IShootHandler shootHandler;
     private final IGameActionsHandler actionsHandler;
@@ -31,12 +32,8 @@ public class Player {
     private int hp;
     private int lives;
 
-    final int MAX_CONSECUTIVE_SHOTS = 3; // серия выстрелов максимальная
     final long fireDelay = 200_000_000L;
-    final long COOLDOWN_DURATION = 1_000_000_000L;
     private long lastShot = 0;
-    private int consecutiveShots = 0; // Счетчик выстрелов в текущей серии
-    private long cooldownEndTime = 0; // Наносекунда окончания кулдауна
 
     private final Image sprite = Assets.getImage("player_ship.png");
 
@@ -60,10 +57,8 @@ public class Player {
         this.y = START_Y;
         this.hp = MAX_HP;
         this.lastShot = 0;
-        this.consecutiveShots = 0;
-        this.cooldownEndTime = 0;
     }
-    public void update (double dt, long now, Keys keys, double W, double H){
+    public void update(double dynamicMaxY, double dt, long now, Keys keys, double W, double H){
 
         double vx = 0, vy = 0;
         double speed = 400; // пикс/сек
@@ -87,6 +82,13 @@ public class Player {
             x = MAX_X;
         if (x > W - MAX_X)
             x = W - MAX_X;
+
+        if (dynamicMaxY == -1)
+            dynamicMaxY = H;
+
+        if (y < dynamicMaxY)
+            y = dynamicMaxY;
+
         if (y < MAX_Y)
             y = MAX_Y;
         if (y > H - MAX_Y)
@@ -117,14 +119,14 @@ public class Player {
         g.drawImage(sprite, x - w / 2, y - h / 2, w, h);
 
         // отрисовка кулдауна у оружия
-        if (System.nanoTime() < cooldownEndTime) {
-            g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-            g.setFill(Color.RED);
-            g.setTextAlign(TextAlignment.CENTER);
-
-            double textY = y + h / 2 + 15;
-            g.fillText("RELOADING...", x, textY);
-        }
+//        if (System.nanoTime() < cooldownEndTime) {
+//            g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+//            g.setFill(Color.RED);
+//            g.setTextAlign(TextAlignment.CENTER);
+//
+//            double textY = y + h / 2 + 15;
+//            g.fillText("RELOADING...", x, textY);
+//        }
 
         // отрисовка имени
         g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
@@ -149,20 +151,17 @@ public class Player {
         g.restore();
     }
 
-    public boolean checkBulletCollision(Bullet bullet){
-        if (bullet.isByPlayer())
-            return false;
+    public boolean checkCollisionWithObject(IHaveSize object){
+        double obj_halfW = object.getW() / 2.0;
+        double obj_halfH = object.getH() / 2.0;
+        double obj_x = object.getX();
+        double obj_y = object.getY();
 
-        double b_halfW = bullet.getW() / 2.0;
-        double b_halfH = bullet.getH() / 2.0;
-        double b_x = bullet.getX();
-        double b_y = bullet.getY();
+        double halfW = this.w / 2.0;
+        double halfH = this.h / 2.0;
 
-        double p_halfW = this.w / 2.0;
-        double p_halfH = this.h / 2.0;
-
-        boolean overlapX = (b_x + b_halfW >= this.x - p_halfW) && (b_x - b_halfW <= this.x + p_halfW);
-        boolean overlapY = (b_y + b_halfH >= this.y - p_halfH) && (b_y- b_halfH <= this.y + p_halfH);
+        boolean overlapX = (obj_x + obj_halfW >= this.x - halfW) && (obj_x - obj_halfW <= this.x + halfW);
+        boolean overlapY = (obj_y + obj_halfH >= this.y - halfH) && (obj_y- obj_halfH <= this.y + halfH);
 
         return overlapX && overlapY;
     }
@@ -174,18 +173,34 @@ public class Player {
             // dead логика
             if (lives == 0)
             {
-                actionsHandler.endGame(false);
+                actionsHandler.onPlayerDead();
                 hp = 0;
             }
             else
             {
-                actionsHandler.restartActiveLevel();
+                actionsHandler.onPlayerMinusLive();
                 hp = MAX_HP;
             }
         }
         else hp -= minus_hp;
     }
+    public void dieInstantly() {
+        minusHP(hp);
+    }
 
     public int getLives(){return lives;}
     public int getHp(){return hp;}
+
+    public double getX() {
+        return x;
+    }
+    public double getY() {
+        return y;
+    }
+    public double getW() {
+        return w;
+    }
+    public double getH() {
+        return h;
+    }
 }
