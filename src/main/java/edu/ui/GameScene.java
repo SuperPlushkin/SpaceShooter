@@ -1,5 +1,6 @@
 package edu.ui;
 
+import edu.managers.SoundManager;
 import edu.subclasses.interfaces.IScene;
 import edu.subclasses.GameScenes;
 import edu.subclasses.classes.Keys;
@@ -28,6 +29,7 @@ public class GameScene implements IScene {
     private GraphicsContext g;
 
     private final LevelsManager levelsManager;
+    private final SoundManager soundManager;
     private final Keys pressedKeys = new Keys();
 
     private Label LivesPlayer;
@@ -47,12 +49,13 @@ public class GameScene implements IScene {
     private Label loseStatsLabel;
     private Label winStatsLabel;
 
-    public GameScene(ScenesManager scenesManager) {
+    public GameScene(ScenesManager scenesManager, SoundManager soundManager) {
         this.scenesManager = scenesManager;
+        this.soundManager = soundManager;
 
         MyScene = createScene();
         // ВАЖНО: точка 'g' инициализируется внутри createScene(), поэтому LevelsManager должен быть создан после него.
-        levelsManager = new LevelsManager(getW() / 2.0, getH() - 140, g, this);
+        levelsManager = new LevelsManager(getW() / 2.0, getH() - 140, g, this, soundManager);
     }
 
     private Scene createScene() {

@@ -3,23 +3,28 @@ package edu.managers;
 import edu.game.FatEnemy;
 import edu.game.NormalEnemy;
 import edu.game.Enemy;
-import edu.subclasses.interfaces.IHaveSize;
-import edu.subclasses.interfaces.ILevelActionsHandler;
-import edu.subclasses.interfaces.IShootHandler;
+import edu.subclasses.interfaces.*;
 import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class EnemiesManager implements IShootHandler {
 
     private final IShootHandler shootHandler;
+    private final ISoundActionsHandler soundHandler;
     private final ILevelActionsHandler levelsActions;
     private final List<Enemy> enemies = new ArrayList<>();
     private final int levelId;
 
-    public EnemiesManager(IShootHandler shotHandler, ILevelActionsHandler levelsActions, int levelId){
+    private final Random random = new Random(); // НОВОЕ ПОЛЕ
+    private double phraseTimer = 0.0;
+    private final double PHRASE_DELAY = 10.0; // Фраза раз в 10 секунд
+
+    public EnemiesManager(IShootHandler shotHandler, ILevelActionsHandler levelsActions, ISoundActionsHandler soundHandler, int levelId){
         this.shootHandler = shotHandler;
+        this.soundHandler = soundHandler;
         this.levelsActions = levelsActions;
         this.levelId = levelId;
     }
@@ -53,23 +58,19 @@ public class EnemiesManager implements IShootHandler {
     public void spawnEnemiesVersion2() {
         double worldW = 600;
         double centerX = worldW / 2.0;
-        double lineY1 = 75;
-        double lineY2 = 135;
-        double bossY = 200;
 
-        // 1. Первая линия NormalEnemy (Щит)
-        int normalCols = 6;
+        // Первая линия
         double normalStartX = 40;
         double normalGapX = 90;
 
-        for (int c = 0; c < normalCols; c++) {
-            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, lineY1, this));
-            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, lineY2, this));
+        for (int c = 0; c < 6; c++) {
+            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, 75, this));
+            enemies.add(new NormalEnemy(normalStartX + c * normalGapX, 135, this));
         }
 
-        // 2. Вторая линия BossEnemy (Эскорт)
-        enemies.add(new FatEnemy(centerX - 120, bossY, this));
-        enemies.add(new FatEnemy(centerX + 120, bossY, this));
+        // Вторая линия
+        enemies.add(new FatEnemy(centerX - 120, 220, this));
+        enemies.add(new FatEnemy(centerX + 120, 220, this));
     }
     public void spawnEnemiesVersion3() {
         double worldW = 600;
@@ -109,6 +110,17 @@ public class EnemiesManager implements IShootHandler {
             enemy.update(dt, worldW, worldH);
         }
 
+        phraseTimer += dt;
+        if (phraseTimer >= PHRASE_DELAY) {
+            if (!enemies.isEmpty()) {
+                // Шанс 1 из 3, что противник что-то скажет
+                if (random.nextInt(3) == 0) {
+                    soundHandler.onEnemySayPhrase();
+                }
+            }
+            phraseTimer = 0.0; // Сбрасываем таймер
+        }
+
         checkEnemyCollisionsAndSeparate();
     }
     public void renderEnemies(GraphicsContext g){
@@ -134,6 +146,7 @@ public class EnemiesManager implements IShootHandler {
             if (enemy.checkCollisionWithObject(object)) {
 
                 if (enemy.takeDamage(damage_on_hit)) {
+                    soundHandler.onEnemyDestroyed(); // ЗВУК ВЗРЫВА
                     iterator.remove();
                     levelsActions.onEnemyKilled();
                 }
@@ -185,6 +198,6 @@ public class EnemiesManager implements IShootHandler {
         return enemies.stream().anyMatch(enemy -> enemy.getY() + enemy.getH() / 2.0 >= defeatLineY);
     }
     public double getHighestEnemyY() {
-        return enemies.isEmpty() ? -1 : enemies.stream().mapToDouble(Enemy::getY).min().getAsDouble();
+        return enemies.isEmpty() ? -Double.MAX_VALUE : enemies.stream().mapToDouble(Enemy::getY).min().getAsDouble();
     }
 }

@@ -1,10 +1,7 @@
 package edu.game;
 
 import edu.subclasses.classes.Assets;
-import edu.subclasses.interfaces.IGameActionsHandler;
-import edu.subclasses.interfaces.IHaveSize;
-import edu.subclasses.interfaces.ILevelActionsHandler;
-import edu.subclasses.interfaces.IShootHandler;
+import edu.subclasses.interfaces.*;
 import edu.managers.BulletsManager;
 import edu.managers.EnemiesManager;
 import javafx.scene.canvas.GraphicsContext;
@@ -16,6 +13,7 @@ import java.util.List;
 public class Level implements IShootHandler, ILevelActionsHandler {
 
     private final IGameActionsHandler gameActions;
+    private final ISoundActionsHandler soundHandler;
     private final EnemiesManager enemiesManager;
     private final BulletsManager bulletsManager;
 
@@ -24,9 +22,10 @@ public class Level implements IShootHandler, ILevelActionsHandler {
 
     protected Image sprite = Assets.getImage("background_stars-for-wars.jpg");
 
-    public Level (IGameActionsHandler gameActions, int enemySeed) {
+    public Level (IGameActionsHandler gameActions, ISoundActionsHandler soundHandler, int enemySeed) {
         this.gameActions = gameActions;
-        this.enemiesManager = new EnemiesManager(this, this, enemySeed);
+        this.soundHandler = soundHandler;
+        this.enemiesManager = new EnemiesManager(this, this, soundHandler, enemySeed);
         this.bulletsManager = new BulletsManager();
     }
 
@@ -51,11 +50,9 @@ public class Level implements IShootHandler, ILevelActionsHandler {
 
         // СТОЛКНОВЕНИЕ С ПОЛОМ
         if (enemiesManager.checkIfAnyEnemyReachedY(defeatLineY))
-        {
             gameActions.failLevelByEnemiesReachingBottom();
-            return -1;
-        }
-        else return enemiesManager.getHighestEnemyY();
+
+        return enemiesManager.getHighestEnemyY();
     }
     public void render (GraphicsContext g, double worldW, double worldH){
         g.setFill(Color.WHITE);
@@ -65,7 +62,6 @@ public class Level implements IShootHandler, ILevelActionsHandler {
 
         enemiesManager.renderEnemies(g);
         bulletsManager.renderBullets(g);
-
 
         // РИСОВАНИЕ ЛИНИИ ПОРАЖЕНИЯ
         g.save();
@@ -83,6 +79,12 @@ public class Level implements IShootHandler, ILevelActionsHandler {
 
     public void makeShoot(double x, double y, double vx, double vy, boolean byPlayer){
         bulletsManager.makeBullet(x, y, vx, vy, byPlayer);
+
+        if (byPlayer)
+        {
+            soundHandler.onPlayerShoot(); // Звук выстрела игрока
+        }
+        else soundHandler.onEnemyShoot(); // Звук выстрела противника
     }
     public List<Bullet> checkBulletCollisionOnEnemies() {
         var bullets = bulletsManager.getBullets();

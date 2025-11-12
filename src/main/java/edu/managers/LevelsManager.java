@@ -1,5 +1,6 @@
 package edu.managers;
 
+import edu.subclasses.interfaces.ISoundActionsHandler;
 import edu.ui.GameScene;
 import edu.subclasses.interfaces.IGameActionsHandler;
 import edu.subclasses.interfaces.IShootHandler;
@@ -10,10 +11,12 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-public class LevelsManager implements IShootHandler, IGameActionsHandler {
+public class LevelsManager implements IShootHandler, IGameActionsHandler, ISoundActionsHandler {
 
     private final GameScene gameScene;
+    private final SoundManager soundManager;
 
     private final Player player;
     private final List<Level> levels = new ArrayList<>();
@@ -36,13 +39,13 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     private int levelEnemiesKilled = 0;
     private double currentLevelTime = 0;
 
-    public LevelsManager (double startXPlayer, double startYPlayer, GraphicsContext g, GameScene gameScene) {
+    public LevelsManager (double startXPlayer, double startYPlayer, GraphicsContext g, GameScene gameScene, SoundManager soundManager) {
         this.player = new Player(startXPlayer, startYPlayer, this);
         this.gameScene = gameScene;
+        this.soundManager = soundManager;
 
-        initLevels(); // Создаем уровни при инициализации
+        initLevels();
         makeUpdateTimer(g);
-        loop.start();
     }
 
     private void makeUpdateTimer (GraphicsContext g){
@@ -83,6 +86,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
 
     public void startGame() {
         makePause(PauseType.None);
+        loop.start();
 
         player.reset();
 
@@ -99,21 +103,27 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     }
     public void stopGame() {
         makePause(PauseType.JustPause);
+        loop.stop();
     }
     public void endGame(boolean isWin) {
         makePause(PauseType.GameOver);
 
         if (isWin)
         {
+            onGameOverWin(); // ЗВУК ПОБЕДЫ
             gameScene.renderWinGame(getFormatedCompletedLevels(), totalGameTime, currentLevelTime);
         }
-        else gameScene.renderLoseGame(getFormatedCompletedLevels(activeLevelIndex), totalGameTime, currentLevelTime);
+        else
+        {
+            onGameOverLose(); // ЗВУК ПРОИГРЫША
+            gameScene.renderLoseGame(getFormatedCompletedLevels(activeLevelIndex), totalGameTime, currentLevelTime);
+        }
     }
 
     private void initLevels() {
-        levels.add(new Level(this, 2));
-        levels.add(new Level(this, 1));
-        levels.add(new Level(this, 3));
+        levels.add(new Level(this, this, 2));
+        levels.add(new Level(this, this, 1));
+        levels.add(new Level(this, this, 3));
 
         activeLevel = levels.getFirst();
     }
@@ -135,6 +145,8 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
             gameScene.updatePlayerInfo(player.getLives(), player.getHp());
             gameScene.updateStatsInfo(totalEnemiesKilled, totalGameTime);
             gameScene.updateLevelTitle(activeLevelIndex, levels.size());
+
+            onLevelStart();
         }
     }
     private void resetLevels(){
@@ -154,11 +166,13 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
         if (pauseType == PauseType.JustPause) {
             makePause(PauseType.None);
             gameScene.onPauseChange(false);
+            onLevelStart();
         }
         else
         {
             makePause(PauseType.JustPause);
             gameScene.onPauseChange(true);
+            onPauseMenu();
         }
     }
 
@@ -170,9 +184,11 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
 
     public void onPlayerMinusLive(){
         restartActiveLevel();
+        onPlayerDestroyed();
     }
     public void onPlayerDead(){
         endGame(false);
+        onPlayerDestroyed();
     }
     public void failLevelByEnemiesReachingBottom() {
         endGame(false);
@@ -202,7 +218,10 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
 
             if (player.checkCollisionWithObject(bullet)) {
                 bulletsToDelete.add(i);
-                player.minusHP(1); // Колхоз надо убрать. Надо брать урон из пули
+
+                if(!player.minusHP(1)) // Колхоз надо убрать. Надо брать урон из пули
+                    onPlayerGetHit();
+
                 gameScene.updatePlayerInfo(player.getLives(), player.getHp());
             }
         }
@@ -222,6 +241,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
         {
             makePause(PauseType.ShowingLevelResults);
             gameScene.renderLevelComplete(getFormatedCompletedLevels(), (activeLevelIndex + 1), totalGameTime, currentLevelTime);
+            onLevelComplete();
         }
         else endGame(true);
     }
@@ -251,4 +271,29 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler {
     public double getH() {
         return gameScene.getH();
     }
+
+
+    @Override
+    public void onPlayerShoot() { soundManager.playSFX("player_shoot"); }
+    @Override
+    public void onEnemyShoot() { soundManager.playSFX("enemy_shoot" + (new Random().nextInt(2) + 1)); }
+    @Override
+    public void onEnemyDestroyed() { soundManager.playSFX("enemy_death_" + (new Random((long)currentLevelTime).nextInt(7) + 1)); }
+    @Override
+    public void onPlayerDestroyed() { soundManager.playSFX("player_death"); }
+    @Override
+    public void onPlayerGetHit() { soundManager.playSFX("player_get_hit"); }
+    @Override
+    public void onEnemySayPhrase() { soundManager.playSFX(soundManager.getRandomPhraseName()); }
+
+    @Override
+    public void onGameOverLose() { soundManager.playBGM("game_over_lose.mp3", 1); }
+    @Override
+    public void onGameOverWin() { soundManager.playBGM("game_over_win.mp3", 1); }
+    @Override
+    public void onLevelComplete() { soundManager.playBGM("level_complete.wav", 1); }
+    @Override
+    public void onPauseMenu() { soundManager.playBGM("pause_music.mp3", 1); }
+    @Override
+    public void onLevelStart() { soundManager.playBGM("level_music.mp3", -1); }
 }

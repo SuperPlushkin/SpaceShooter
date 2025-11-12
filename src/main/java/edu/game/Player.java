@@ -35,6 +35,17 @@ public class Player implements IHaveSize {
     final long fireDelay = 200_000_000L;
     private long lastShot = 0;
 
+
+    // Система неуязвимости
+    private boolean isInvulnerable = false;
+    private long invulnerabilityStartTime = 0;
+    private final long INVULNERABILITY_DURATION = 1_000_000_000L;
+
+    // Система мигания
+    private boolean isVisible = true;
+    private final long BLINK_INTERVAL = 100_000_000L;
+    private long lastBlinkTime = 0;
+
     private final Image sprite = Assets.getImage("player_ship.png");
 
     public Player(double startX, double startY, LevelsManager levelsManager) {
@@ -57,8 +68,14 @@ public class Player implements IHaveSize {
         this.y = START_Y;
         this.hp = MAX_HP;
         this.lastShot = 0;
+        this.isInvulnerable = false;
+        this.isVisible = true;
+        this.invulnerabilityStartTime = 0;
+        this.lastBlinkTime = 0;
     }
     public void update(double dynamicMaxY, double dt, long now, Keys keys, double W, double H){
+
+        updateInvulnerability(now);
 
         double vx = 0, vy = 0;
         double speed = 400; // пикс/сек
@@ -115,8 +132,23 @@ public class Player implements IHaveSize {
 //            }
 //        }
     }
+    private void updateInvulnerability(long now) {
+        if (!isInvulnerable)
+            return;
+
+        if (now - invulnerabilityStartTime >= INVULNERABILITY_DURATION)
+        {
+            isInvulnerable = false;
+            isVisible = true;
+        }
+        else if (now - lastBlinkTime >= BLINK_INTERVAL)
+        {
+            isVisible = !isVisible;
+            lastBlinkTime = now;
+        }
+    }
+
     public void render (GraphicsContext g){
-        g.drawImage(sprite, x - w / 2, y - h / 2, w, h);
 
         // отрисовка кулдауна у оружия
 //        if (System.nanoTime() < cooldownEndTime) {
@@ -128,15 +160,22 @@ public class Player implements IHaveSize {
 //            g.fillText("RELOADING...", x, textY);
 //        }
 
+        // отрисовка игрока
+        if (isVisible) {
+            g.drawImage(sprite, x - w / 2, y - h / 2, w, h);
+        }
+
         // отрисовка имени
-        g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-        g.setFill(Color.GOLD);
-        g.setTextAlign(TextAlignment.CENTER);
+        if (isVisible) {
+            g.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+            g.setFill(Color.GOLD);
+            g.setTextAlign(TextAlignment.CENTER);
 
-        double textY = y - h / 2 - 5;
-        g.fillText("Кирилл Вейдер", x, textY);
+            double textY = y - h / 2 - 5;
+            g.fillText("Кирилл Вейдер", x, textY);
+        }
 
-        // отрисовка хп противника
+        // отрисовка хп
         g.save();
         double hpBarWidth = w * 0.8; // Ширина полоски здоровья (80% ширины корабля)
         double hpBarHeight = 3;     // Высота полоски здоровья
@@ -148,10 +187,23 @@ public class Player implements IHaveSize {
         g.setFill(Color.RED);
         double currentHpWidth = hpBarWidth * ((double)hp / MAX_HP);
         g.fillRect(hpBarX, hpBarY, currentHpWidth, hpBarHeight);
+
+        // Отображаем индикатор неуязвимости
+        if (isInvulnerable) {
+            g.setFill(Color.CYAN);
+            g.setFont(Font.font("Arial", FontWeight.BOLD, 8));
+            g.setTextAlign(TextAlignment.CENTER);
+            g.fillText("НЕУЯЗВИМ!", x, hpBarY + 15);
+        }
+
         g.restore();
     }
 
     public boolean checkCollisionWithObject(IHaveSize object){
+
+        if (isInvulnerable)
+            return false;
+
         double obj_halfW = object.getW() / 2.0;
         double obj_halfH = object.getH() / 2.0;
         double obj_x = object.getX();
@@ -166,7 +218,18 @@ public class Player implements IHaveSize {
         return overlapX && overlapY;
     }
 
-    public void minusHP(int minus_hp){
+    private void activateInvulnerability() {
+        this.isInvulnerable = true;
+        this.invulnerabilityStartTime = System.nanoTime();
+        this.isVisible = true; // Начинаем с видимого состояния
+        this.lastBlinkTime = System.nanoTime();
+    }
+
+    public boolean minusHP(int minus_hp){
+
+        if (isInvulnerable)
+            return false;
+
         if (hp - minus_hp <= 0){
             lives--;
 
@@ -180,12 +243,19 @@ public class Player implements IHaveSize {
             {
                 actionsHandler.onPlayerMinusLive();
                 hp = MAX_HP;
+                return true;
             }
         }
-        else hp -= minus_hp;
+        else
+        {
+            hp -= minus_hp;
+            activateInvulnerability();
+        }
+
+        return false;
     }
-    public void dieInstantly() {
-        minusHP(hp);
+    public boolean dieInstantly() {
+        return minusHP(hp);
     }
 
     public int getLives(){return lives;}
