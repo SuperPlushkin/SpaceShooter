@@ -157,7 +157,6 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler, ISound
     private void makePause(PauseType newPauseType){
         pauseType = newPauseType;
         paused = newPauseType != PauseType.None;
-//        updateLoopState();
     }
     public void togglePause() {
         if (pauseType == PauseType.GameOver || pauseType == PauseType.ShowingLevelResults)
@@ -219,7 +218,7 @@ public class LevelsManager implements IShootHandler, IGameActionsHandler, ISound
             if (player.checkCollisionWithObject(bullet)) {
                 bulletsToDelete.add(i);
 
-                if(!player.minusHP(1)) // Колхоз надо убрать. Надо брать урон из пули
+                if(!player.isInvulnerable() && !player.minusHP(1)) // Колхоз надо убрать. Надо брать урон из пули
                     onPlayerGetHit();
 
                 gameScene.updatePlayerInfo(player.getLives(), player.getHp());

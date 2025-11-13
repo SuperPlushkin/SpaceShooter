@@ -227,9 +227,6 @@ public class Player implements IHaveSize {
 
     public boolean minusHP(int minus_hp){
 
-        if (isInvulnerable)
-            return false;
-
         if (hp - minus_hp <= 0){
             lives--;
 
@@ -258,6 +255,7 @@ public class Player implements IHaveSize {
         return minusHP(hp);
     }
 
+    public boolean isInvulnerable(){return isInvulnerable;}
     public int getLives(){return lives;}
     public int getHp(){return hp;}
 
